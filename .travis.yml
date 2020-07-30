@@ -14,6 +14,8 @@ before_script:
   - echo -e "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com" >>  ~/.git-credentials
   - curl -s https://kubernetes-helm.storage.googleapis.com/helm-v${HELM_VERSION}-linux-amd64.tar.gz | tar zx
   - sudo mv linux-amd64/helm /usr/local/bin/
+  - helm plugin install https://github.com/instrumenta/helm-kubeval ||echo "installing plugin helm-kubeval"
+  - helm plugin install https://github.com/instrumenta/helm-conftest||echo "installing plugin helm-conftest"
   - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl
   - chmod +x kubectl && sudo mv kubectl /usr/local/bin/
   - kubectl config set-cluster default-cluster --server=${K8S_API_URL} || travis_terminate 1
@@ -43,14 +45,11 @@ jobs:
         - docker build -f example-cloud-connector/Dockerfile -q -t docker.io/activiti/example-cloud-connector:$(cat VERSION) example-cloud-connector
         - docker build -f example-runtime-bundle/Dockerfile -q -t docker.io/activiti/example-runtime-bundle:$(cat VERSION) example-runtime-bundle
         - docker build -f activiti-cloud-modeling/Dockerfile -q -t docker.io/activiti/activiti-cloud-modeling:$(cat VERSION) activiti-cloud-modeling
-
         - docker push docker.io/activiti/activiti-cloud-query:$(cat VERSION) || travis_terminate 1
         - docker push docker.io/activiti/example-runtime-bundle:$(cat VERSION) || travis_terminate 1
         - docker push docker.io/activiti/example-cloud-connector:$(cat VERSION) || travis_terminate 1
         - docker push docker.io/activiti/activiti-cloud-modeling:$(cat VERSION) || travis_terminate 1
-
-        - make create-helm-charts-release-and-upload
-
+        - make create-helm-charts-release-and-upload || travis_terminate 1
         - cp VERSION  activiti-cloud-dependencies/
         - cd activiti-cloud-dependencies
         - travis_wait ${TRAVIS_WAIT_TIMEOUT} mvn -q versions:set -Droot.log.level=off -DnewVersion=${VERSION}  || travis_terminate 1

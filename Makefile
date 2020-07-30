@@ -60,6 +60,8 @@ prepare-helm-chart:
         	helm repo add alfresco-incubator https://kubernetes-charts.alfresco.com/incubator && \
         	helm dependency build && \
         	helm lint && \
+					helm kubeval . -v 1.16.0 && \
+					helm kubeval . -v 1.15.0 && \
 		helm package .
 
 run-helm-chart:
@@ -69,7 +71,7 @@ run-helm-chart:
             		--set global.gateway.domain=${GLOBAL_GATEWAY_DOMAIN} \
             		--namespace ${PREVIEW_NAMESPACE} \
             		--wait
-								
+
 create-helm-charts-release-and-upload:
 	@for chart in $(charts) ; do \
 		cd $$chart ; \
@@ -79,4 +81,4 @@ create-helm-charts-release-and-upload:
 		make github; \
 		sleep 60 ; \
 		cd - ; \
-	done 
+	done
